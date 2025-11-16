@@ -102,10 +102,10 @@
         <th>Loaded to UKG</th>
         <th>Date Available if VL Not Sufficient</th>
         <th>Status</th>
-        <th>Should Be Loaded</th>
+        <th>Amount of Hours Loaded</th>
         <th>Used</th>
         <th>Remaining</th>
-        <th>VL Needed to Advance</th>
+        <th>VL Hours Needed to Advance HL</th>
       </tr>
     </thead>
     <tbody id="holidayTableBody"></tbody>
@@ -138,7 +138,10 @@ function calculateHL() {
     { name: 'Bonus Day 2', dateObserved: '2025-12-30', ukgDate: '2025-10-20', firstAvailable: '2025-12-17' },
     { name: 'Bonus Day 3', dateObserved: '2025-12-31', ukgDate: '2025-10-20', firstAvailable: '2025-12-18' },
     { name: "New Year's Day", dateObserved: '2026-01-01', ukgDate: '2025-10-20', firstAvailable: '2025-12-19' },
-    { name: "Day After New Year's", dateObserved: '2026-01-02', ukgDate: '2025-10-20', firstAvailable: '2025-12-20' }
+    { name: "Day After New Year's", dateObserved: '2026-01-02', ukgDate: '2025-10-20', firstAvailable: '2025-12-20' },
+    { name: "Martin Luther King Jr. Day", dateObserved: '2026-01-19', ukgDate: '2025-11-30', firstAvailable: '2026-01-09' },
+    { name: "Memorial Day", dateObserved: '2026-05-25', ukgDate: '2026-04-05', firstAvailable: '2026-05-15' },
+    { name: "Juneteenth", dateObserved: '2026-06-19', ukgDate: '2026-04-05', firstAvailable: '2026-06-09' }
   ];
 
   holidays.sort((a, b) => new Date(a.dateObserved) - new Date(b.dateObserved));
@@ -166,7 +169,6 @@ function calculateHL() {
 
   let hlUsed = hlTotalLoaded - hlBalance;
   tempUsed = hlUsed;
-  let hlRemainingTotal = 0;
 
   const outputRows = loadedHolidays.map(holiday => {
     let status = "Not Available";
@@ -183,9 +185,7 @@ function calculateHL() {
     } else if (checkDate >= holiday.firstAvail || earlyUsesAllowed > 0) {
       status = "Available";
       used = 0;
-      remaining = loaded - tempUsed;
-      hlRemainingTotal += remaining;
-      tempUsed = 0;
+      remaining = loaded;
       vlNeededDisplay = (3 * loaded).toFixed(2);
       if (checkDate < holiday.firstAvail) earlyUsesAllowed--;
     }
@@ -206,8 +206,7 @@ function calculateHL() {
   document.getElementById("holidayTableBody").innerHTML = outputRows.join('');
   document.getElementById("output").innerHTML = `<div class="result">
     ✅ <strong>Total HL hours loaded into UKG by this date:</strong> ${hlTotalLoaded.toFixed(2)} hrs<br/>
-    💡 <strong>Based on your balance of ${hlBalance.toFixed(2)} hrs, you have used:</strong> ${hlUsed.toFixed(2)} hrs<br/>
-    🟢 <strong>Holiday Leave hours available for use:</strong> ${hlRemainingTotal.toFixed(2)} hrs
+    💡 <strong>Based on your balance of ${hlBalance.toFixed(2)} hrs, you have used:</strong> ${hlUsed.toFixed(2)} hrs
   </div>`;
 }
 </script>
