@@ -59,8 +59,6 @@
     .red-text { color: #d7191c; font-weight: bold; }
     .green-text { color: #1a9850; font-weight: bold; }
     .black-text { color: #000; font-weight: bold; }
-
-    /* New classes just for the VL hours cell */
     .vl-green { color: #1a9850; font-weight: bold; }
     .vl-red { color: #d7191c; font-weight: bold; }
   </style>
@@ -116,10 +114,9 @@
 
 <script>
 function calculateHL() {
-
   const fteInput = document.getElementById("fte");
   const dateInput = document.getElementById("checkDate");
-  const hlBalance = parseFloat(document.getElementById("hlBalance").value) || 0;
+  const hlBalanceInput = parseFloat(document.getElementById("hlBalance").value) || 0;
   const vlBalance = parseFloat(document.getElementById("vlBalance").value) || 0;
   const employedBeforeCutoff = document.getElementById("employmentStatus").value === "yes";
 
@@ -153,57 +150,55 @@ function calculateHL() {
   holidays.sort((a,b)=>new Date(a.dateObserved)-new Date(b.dateObserved));
 
   let hlTotalLoaded = 0;
+  let adjustedHLBalance = hlBalanceInput;
   let tempUsed = 0;
   let loadedHolidays = [];
 
   holidays.forEach(h=>{
     const ukg = new Date(h.ukgDate+"T00:00:00");
-
-    const restricted = [
-      'Independence Day','Labor Day','Christmas Eve',
-      'Day After Christmas','Bonus Day 1','Bonus Day 2',
-      'Bonus Day 3',"Day After New Year's"
-    ];
-
+    const restricted = ['Independence Day','Labor Day','Christmas Eve','Day After Christmas','Bonus Day 1','Bonus Day 2','Bonus Day 3','Day After New Year\'s'];
     if (!employedBeforeCutoff && restricted.includes(h.name)) return;
-
     if (checkDate >= ukg) {
       loadedHolidays.push(h);
       hlTotalLoaded += workdayHours;
     }
   });
 
-  let hlUsed = hlTotalLoaded - hlBalance;
+  if (checkDate > new Date()) {
+    holidays.forEach(h => {
+      const ukg = new Date(h.ukgDate + "T00:00:00");
+      if (checkDate >= ukg && new Date() < ukg) {
+        adjustedHLBalance += workdayHours;
+      }
+    });
+  }
+
+  let hlUsed = hlTotalLoaded - adjustedHLBalance;
   tempUsed = hlUsed;
 
-  let earliestUnavailableVLShown = false;  // NEW FLAG
+  let earliestUnavailableVLShown = false;
   let totalRemainingAvailableHL = 0;
 
-  const outputRows = loadedHolidays.map(holiday=>{
+  const outputRows = loadedHolidays.map(holiday => {
     const observed = new Date(holiday.dateObserved+"T00:00:00");
     const ukg = new Date(holiday.ukgDate+"T00:00:00");
     const firstAvail = new Date(holiday.firstAvailable+"T00:00:00");
-
     let loaded = workdayHours;
     let used = 0;
     let remaining = 0;
     let status = "Not Available";
     let vlNeededDisplay = "";
-    let vlClass = "black-text"; // default
+    let vlClass = "black-text";
 
     if (tempUsed >= loaded) {
-
       status = "Previously Applied";
       used = loaded;
       remaining = 0;
       tempUsed -= loaded;
-
     } else {
-
       used = Math.min(tempUsed, loaded);
       remaining = loaded - used;
       tempUsed = Math.max(tempUsed - loaded, 0);
-
       const canAdvanceEarly = earlyUsesAllowed > 0;
       const pastFirstAvail = checkDate >= firstAvail;
 
@@ -211,25 +206,20 @@ function calculateHL() {
         status = "Available";
         vlNeededDisplay = "";
         totalRemainingAvailableHL += remaining;
-
       } else if (canAdvanceEarly) {
         status = "Available";
         vlNeededDisplay = advanceVLNeeded.toFixed(2);
-        vlClass = "vl-green";        // has enough VL for this holiday
+        vlClass = "vl-green";
         earlyUsesAllowed--;
         totalRemainingAvailableHL += remaining;
-
       } else {
-
         status = "Not Available";
         used = 0;
         remaining = 0;
-
-        // FIRST Not Available holiday before firstAvail shows VL needed (in red)
-        if (!pastFirstAvail && earliestUnavailableVLShown === false) {
+        if (!pastFirstAvail && !earliestUnavailableVLShown) {
           vlNeededDisplay = advanceVLNeeded.toFixed(2);
           earliestUnavailableVLShown = true;
-          vlClass = "vl-red";        // does NOT have enough VL
+          vlClass = "vl-red";
         }
       }
     }
@@ -251,11 +241,12 @@ function calculateHL() {
 
   document.getElementById("holidayTableBody").innerHTML = outputRows.join("");
 
+  const formattedCheckDate = checkDate.toLocaleDateString();
   document.getElementById("output").innerHTML = `
     <div class="result">
       ✅ <strong>Total HL hours loaded into UKG by this date:</strong> ${hlTotalLoaded.toFixed(2)} hrs<br/>
-      💡 <strong>Based on your balance of ${hlBalance.toFixed(2)} hrs, you have used:</strong> ${hlUsed.toFixed(2)} hrs<br/><br/>
-      🟩 <strong>Total Remaining Available HL Hours:</strong> ${totalRemainingAvailableHL.toFixed(2)} hrs
+      💡 <strong>Based on your balance of ${hlBalanceInput.toFixed(2)} hrs, adjusted for future loaded holidays, you have used:</strong> ${hlUsed.toFixed(2)} hrs<br/><br/>
+      🟩 <strong>Total Remaining Available HL Hours as of ${formattedCheckDate}:</strong> ${totalRemainingAvailableHL.toFixed(2)} hrs
     </div>
   `;
 }
