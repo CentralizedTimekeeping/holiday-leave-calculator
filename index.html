@@ -39,6 +39,14 @@
       border: 1px solid #a4d4ae;
       max-width: 600px;
     }
+    .disclaimer {
+      margin-top: 1rem;
+      padding: 10px;
+      border-left: 4px solid #f0ad4e;
+      background-color: #fcf8e3;
+      color: #8a6d3b;
+      max-width: 700px;
+    }
     table {
       width: 100%;
       margin-top: 2rem;
@@ -61,6 +69,23 @@
     .black-text { color: #000; font-weight: bold; }
     .vl-green { color: #1a9850; font-weight: bold; }
     .vl-red { color: #d7191c; font-weight: bold; }
+    details {
+      margin-top: 2rem;
+      background: #eef5ff;
+      border-left: 4px solid #005ea2;
+      padding: 1rem;
+      max-width: 800px;
+    }
+    details summary {
+      font-weight: 600;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: #003366;
+      outline: none;
+    }
+    details summary:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -93,27 +118,61 @@
   <button onclick="calculateHL()">Calculate</button>
   <button onclick="location.reload()">Reset</button>
 
-  <div id="output"></div>
+  <div class="disclaimer">
+    ⚠️ Any reduction in VL hours before the planned HL usage may also affect your ability to advance HL hours. Please ensure your VL balance remains sufficient.
+  </div>
 
+  <details>
+    <summary>🗓️ Holiday Leave (HL) Advancement Rule Summary</summary>
+    <div>
+      <p><strong>To use a Holiday Leave (HL) day before it's observed date, the following conditions must be met:</strong></p>
+      <ol>
+        <li><strong>Vacation Leave (VL) Requirement:</strong><br/>
+          You must have the equivalent of <strong>3 days’ worth of VL hours</strong> based on your current <strong>FTE (Full-Time Equivalent)</strong>.<br/>
+          For example, if your FTE is 0.90, one workday equals 7.2 hours. You would need <strong>21.6 VL hours</strong> to advance one Holiday date.
+        </li>
+        <li><strong>Number of Holiday Days That Can Be Advanced:</strong><br/>
+          Divide your VL balance by the 3-day VL requirement. That determines how many <strong>future Holiday days</strong> you may access early.
+        </li>
+        <li><strong>Important Notes:</strong>
+          <ul>
+            <li>The HL advancement is <strong>optional</strong>.</li>
+            <li>If your VL balance drops <em>before</em> the planned HL usage, it may affect your eligibility.</li>
+            <li>Bonus days are only available to employees hired before October 20, 2025.</li>
+            <li>Each Holiday date has its <strong>own available date</strong> which must be respected.</li>
+          </ul>
+        </li>
+        <li><strong>Expiration:</strong>
+          <ul>
+            <li>HL hours from the 2025–2026 fiscal year expire <strong>June 30, 2026</strong>.</li>
+            <li>Independence Day 2026 HL expires <strong>June 30, 2027</strong>.</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+  </details>
+
+  <div id="output"></div>
   <table id="holidayTable">
     <thead>
       <tr>
         <th>Holiday</th>
         <th>Date Observed</th>
-        <th>Loaded to UKG</th>
+        <th>Loaded to SAP</th>
         <th>Date Available if VL Not Sufficient</th>
         <th>Status</th>
         <th>Amount of Hours Loaded</th>
         <th>Used</th>
         <th>Remaining</th>
         <th>VL Hours Needed to Advance HL</th>
+        <th>Expiration Date</th>
       </tr>
     </thead>
     <tbody id="holidayTableBody"></tbody>
   </table>
 
 <script>
-function calculateHL() {
+  function calculateHL() {
   const fteInput = document.getElementById("fte");
   const dateInput = document.getElementById("checkDate");
   const hlBalanceInput = parseFloat(document.getElementById("hlBalance").value) || 0;
@@ -125,37 +184,37 @@ function calculateHL() {
 
   const workdayHours = fte * 8;
   const advanceVLNeeded = 3 * workdayHours;
-
   const checkDate = new Date(dateInput.value + "T00:00:00");
   let earlyUsesAllowed = Math.floor(vlBalance / advanceVLNeeded);
 
   const holidays = [
-    { name:'Independence Day',dateObserved:'2025-07-04',ukgDate:'2025-05-18',firstAvailable:'2025-06-29' },
-    { name:'Labor Day',dateObserved:'2025-09-01',ukgDate:'2025-07-13',firstAvailable:'2025-08-24' },
-    { name:'Thanksgiving Day',dateObserved:'2025-11-27',ukgDate:'2025-10-20',firstAvailable:'2025-11-16' },
-    { name:'Day After Thanksgiving',dateObserved:'2025-11-28',ukgDate:'2025-10-20',firstAvailable:'2025-11-16' },
-    { name:'Christmas Eve',dateObserved:'2025-12-24',ukgDate:'2025-10-20',firstAvailable:'2025-12-14' },
-    { name:'Christmas Day',dateObserved:'2025-12-25',ukgDate:'2025-10-20',firstAvailable:'2025-12-14' },
-    { name:'Day After Christmas',dateObserved:'2025-12-26',ukgDate:'2025-10-20',firstAvailable:'2025-12-15' },
-    { name:'Bonus Day 1',dateObserved:'2025-12-29',ukgDate:'2025-10-20',firstAvailable:'2025-12-16' },
-    { name:'Bonus Day 2',dateObserved:'2025-12-30',ukgDate:'2025-10-20',firstAvailable:'2025-12-17' },
-    { name:'Bonus Day 3',dateObserved:'2025-12-31',ukgDate:'2025-10-20',firstAvailable:'2025-12-18' },
-    { name:"New Year's Day",dateObserved:'2026-01-01',ukgDate:'2025-10-20',firstAvailable:'2025-12-19' },
-    { name:"Day After New Year's",dateObserved:'2026-01-02',ukgDate:'2025-10-20',firstAvailable:'2025-12-20' },
-    { name:"Martin Luther King Jr. Day",dateObserved:'2026-01-19',ukgDate:'2025-11-30',firstAvailable:'2026-01-09' },
-    { name:"Memorial Day",dateObserved:'2026-05-25',ukgDate:'2026-04-05',firstAvailable:'2026-05-15' },
-    { name:"Juneteenth",dateObserved:'2026-06-19',ukgDate:'2026-04-05',firstAvailable:'2026-06-09' }
+    { name:'Independence Day',dateObserved:'2025-07-04',ukgDate:'2025-05-18',firstAvailable:'2025-06-29', expires:'2026-06-30' },
+    { name:'Labor Day',dateObserved:'2025-09-01',ukgDate:'2025-07-13',firstAvailable:'2025-08-24', expires:'2026-06-30' },
+    { name:'Thanksgiving Day',dateObserved:'2025-11-27',ukgDate:'2025-10-20',firstAvailable:'2025-11-16', expires:'2026-06-30' },
+    { name:'Day After Thanksgiving',dateObserved:'2025-11-28',ukgDate:'2025-10-20',firstAvailable:'2025-11-16', expires:'2026-06-30' },
+    { name:'Christmas Eve',dateObserved:'2025-12-24',ukgDate:'2025-10-20',firstAvailable:'2025-12-14', expires:'2026-06-30' },
+    { name:'Christmas Day',dateObserved:'2025-12-25',ukgDate:'2025-10-20',firstAvailable:'2025-12-14', expires:'2026-06-30' },
+    { name:'Day After Christmas',dateObserved:'2025-12-26',ukgDate:'2025-10-20',firstAvailable:'2025-12-15', expires:'2026-06-30' },
+    { name:'Bonus Day 1',dateObserved:'2025-12-29',ukgDate:'2025-10-20',firstAvailable:'2025-12-16', expires:'2026-06-30' },
+    { name:'Bonus Day 2',dateObserved:'2025-12-30',ukgDate:'2025-10-20',firstAvailable:'2025-12-17', expires:'2026-06-30' },
+    { name:'Bonus Day 3',dateObserved:'2025-12-31',ukgDate:'2025-10-20',firstAvailable:'2025-12-18', expires:'2026-06-30' },
+    { name:"New Year's Day",dateObserved:'2026-01-01',ukgDate:'2025-10-20',firstAvailable:'2025-12-19', expires:'2026-06-30' },
+    { name:"Day After New Year's",dateObserved:'2026-01-02',ukgDate:'2025-10-20',firstAvailable:'2025-12-20', expires:'2026-06-30' },
+    { name:"MLK Day",dateObserved:'2026-01-19',ukgDate:'2025-11-30',firstAvailable:'2026-01-09', expires:'2026-06-30' },
+    { name:"Memorial Day",dateObserved:'2026-05-25',ukgDate:'2026-04-05',firstAvailable:'2026-05-15', expires:'2026-06-30' },
+    { name:"Juneteenth",dateObserved:'2026-06-19',ukgDate:'2026-04-05',firstAvailable:'2026-06-09', expires:'2026-06-30' },
+    { name:"Independence Day 2026",dateObserved:'2026-07-03',ukgDate:'2026-05-17',firstAvailable:'2026-06-23', expires:'2027-06-30' }
   ];
 
-  holidays.sort((a,b)=>new Date(a.dateObserved)-new Date(b.dateObserved));
+  holidays.sort((a, b) => new Date(a.dateObserved) - new Date(b.dateObserved));
 
   let hlTotalLoaded = 0;
   let adjustedHLBalance = hlBalanceInput;
   let tempUsed = 0;
   let loadedHolidays = [];
 
-  holidays.forEach(h=>{
-    const ukg = new Date(h.ukgDate+"T00:00:00");
+  holidays.forEach(h => {
+    const ukg = new Date(h.ukgDate + "T00:00:00");
     const restricted = ['Independence Day','Labor Day','Christmas Eve','Day After Christmas','Bonus Day 1','Bonus Day 2','Bonus Day 3','Day After New Year\'s'];
     if (!employedBeforeCutoff && restricted.includes(h.name)) return;
     if (checkDate >= ukg) {
@@ -164,25 +223,25 @@ function calculateHL() {
     }
   });
 
-  if (checkDate > new Date()) {
-    holidays.forEach(h => {
-      const ukg = new Date(h.ukgDate + "T00:00:00");
-      if (checkDate >= ukg && new Date() < ukg) {
-        adjustedHLBalance += workdayHours;
-      }
-    });
-  }
+  // Pre-add if in the future
+  holidays.forEach(h => {
+    const ukg = new Date(h.ukgDate + "T00:00:00");
+    if (checkDate >= ukg && new Date() < ukg) {
+      adjustedHLBalance += workdayHours;
+    }
+  });
 
   let hlUsed = hlTotalLoaded - adjustedHLBalance;
   tempUsed = hlUsed;
 
-  let earliestUnavailableVLShown = false;
   let totalRemainingAvailableHL = 0;
+  let earliestUnavailableVLShown = false;
+  const outputRows = loadedHolidays.map(h => {
+    const observed = new Date(h.dateObserved + "T00:00:00");
+    const ukg = new Date(h.ukgDate + "T00:00:00");
+    const firstAvail = new Date(h.firstAvailable + "T00:00:00");
+    const expiration = new Date(h.expires + "T00:00:00");
 
-  const outputRows = loadedHolidays.map(holiday => {
-    const observed = new Date(holiday.dateObserved+"T00:00:00");
-    const ukg = new Date(holiday.ukgDate+"T00:00:00");
-    const firstAvail = new Date(holiday.firstAvailable+"T00:00:00");
     let loaded = workdayHours;
     let used = 0;
     let remaining = 0;
@@ -193,55 +252,49 @@ function calculateHL() {
     if (tempUsed >= loaded) {
       status = "Previously Applied";
       used = loaded;
-      remaining = 0;
       tempUsed -= loaded;
     } else {
       used = Math.min(tempUsed, loaded);
       remaining = loaded - used;
-      tempUsed = Math.max(tempUsed - loaded, 0);
-      const canAdvanceEarly = earlyUsesAllowed > 0;
+      tempUsed -= used;
+      const canAdvance = earlyUsesAllowed > 0;
       const pastFirstAvail = checkDate >= firstAvail;
 
-      if (pastFirstAvail) {
+      if (pastFirstAvail || canAdvance) {
         status = "Available";
-        vlNeededDisplay = "";
         totalRemainingAvailableHL += remaining;
-      } else if (canAdvanceEarly) {
-        status = "Available";
-        vlNeededDisplay = advanceVLNeeded.toFixed(2);
-        vlClass = "vl-green";
-        earlyUsesAllowed--;
-        totalRemainingAvailableHL += remaining;
-      } else {
-        status = "Not Available";
-        used = 0;
-        remaining = 0;
-        if (!pastFirstAvail && !earliestUnavailableVLShown) {
+        if (!pastFirstAvail && canAdvance) {
           vlNeededDisplay = advanceVLNeeded.toFixed(2);
-          earliestUnavailableVLShown = true;
+          vlClass = "vl-green";
+          earlyUsesAllowed--;
+        }
+      } else {
+        if (!earliestUnavailableVLShown) {
+          vlNeededDisplay = advanceVLNeeded.toFixed(2);
           vlClass = "vl-red";
+          earliestUnavailableVLShown = true;
         }
       }
     }
 
     return `
       <tr>
-        <td>${holiday.name}</td>
+        <td>${h.name}</td>
         <td>${observed.toLocaleDateString()}</td>
         <td>${ukg.toLocaleDateString()}</td>
         <td>${firstAvail.toLocaleDateString()}</td>
-        <td class="${status==='Available'?'available':status==='Previously Applied'?'previously-applied':'not-available'}">${status}</td>
+        <td class="${status === 'Available' ? 'available' : status === 'Previously Applied' ? 'previously-applied' : 'not-available'}">${status}</td>
         <td class="blue-text">${loaded.toFixed(2)}</td>
-        <td class="${used>0?'red-text':'black-text'}">${used.toFixed(2)}</td>
-        <td class="${remaining>0?'green-text':'black-text'}">${remaining.toFixed(2)}</td>
+        <td class="${used > 0 ? 'red-text' : 'black-text'}">${used.toFixed(2)}</td>
+        <td class="${remaining > 0 ? 'green-text' : 'black-text'}">${remaining.toFixed(2)}</td>
         <td class="${vlClass}">${vlNeededDisplay}</td>
-      </tr>
-    `;
+        <td>${expiration.toLocaleDateString()}</td>
+      </tr>`;
   });
 
   document.getElementById("holidayTableBody").innerHTML = outputRows.join("");
-
   const formattedCheckDate = checkDate.toLocaleDateString();
+
   document.getElementById("output").innerHTML = `
     <div class="result">
       ✅ <strong>Total HL hours loaded into UKG by this date:</strong> ${hlTotalLoaded.toFixed(2)} hrs<br/>
@@ -250,7 +303,7 @@ function calculateHL() {
     </div>
   `;
 }
-</script>
+  </script>
 
 </body>
 </html>
